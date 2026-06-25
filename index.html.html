@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Place Value – Big Numbers | Engineer Nadeim</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f0f4ff;
+    --navy: #1a1a6e;
+    --blue: #2d6cdf;
+    --cyan: #00cec9;
+    --purple: #6c3fc5;
+    --pink: #fd79a8;
+    --yellow: #ffd93d;
+    --green: #00b894;
+    --red: #ff4757;
+    --orange: #e17055;
+    --gold: #fdcb6e;
+    --text: #2d3436;
+    --shadow: 0 8px 32px rgba(45,108,223,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Nunito', sans-serif; background: var(--bg); min-height: 100vh; overflow-x: hidden; }
+
+  /* BG SHAPES */
+  .bg-shapes { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; overflow:hidden; }
+  .shape { position:absolute; opacity:0.07; animation:float 7s ease-in-out infinite; }
+  .shape:nth-child(1){ width:130px;height:130px;background:var(--blue);border-radius:50%;top:4%;left:3%;animation-delay:0s; }
+  .shape:nth-child(2){ width:80px;height:80px;background:var(--purple);top:12%;right:6%;animation-delay:1s;transform:rotate(45deg); }
+  .shape:nth-child(3){ width:65px;height:65px;background:var(--cyan);border-radius:50%;bottom:20%;left:3%;animation-delay:2s; }
+  .shape:nth-child(4){ width:95px;height:95px;background:var(--gold);bottom:9%;right:4%;animation-delay:1.5s;clip-path:polygon(50% 0%,0% 100%,100% 100%); }
+  .shape:nth-child(5){ width:60px;height:60px;background:var(--pink);top:50%;left:1%;animation-delay:0.5s;border-radius:30% 70% 70% 30%/30% 30% 70% 70%; }
+  .shape:nth-child(6){ width:55px;height:55px;background:var(--orange);top:36%;right:2%;animation-delay:2.5s;transform:rotate(30deg); }
+  @keyframes float{ 0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-18px) rotate(8deg);} }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1a1a6e 0%, #2d6cdf 55%, #00cec9 100%);
+    padding:18px 20px 14px; text-align:center; position:relative; z-index:10;
+    box-shadow:0 4px 20px rgba(26,26,110,0.4);
+  }
+  .brand { font-family:'Fredoka One',cursive; color:var(--yellow); font-size:1.1rem; letter-spacing:1px; }
+  .brand-phone { color:rgba(255,255,255,0.85); font-size:0.78rem; font-weight:600; }
+  .header-title { font-family:'Fredoka One',cursive; color:white; font-size:1.55rem; margin-top:4px; text-shadow:2px 2px 0 rgba(0,0,0,0.2); }
+  .header-sub { color:rgba(255,255,255,0.9); font-size:0.83rem; font-weight:600; margin-top:2px; }
+
+  /* SCREENS */
+  .screen { display:none; position:relative; z-index:5; }
+  .screen.active { display:block; }
+
+  /* NAME */
+  .name-screen { min-height:calc(100vh - 110px); display:flex; align-items:center; justify-content:center; padding:30px 20px; }
+  .name-card { background:white; border-radius:28px; padding:40px 28px; box-shadow:var(--shadow); max-width:430px; width:100%; text-align:center; border:3px solid var(--yellow); }
+  .name-emoji { font-size:3.8rem; margin-bottom:10px; }
+  .name-title { font-family:'Fredoka One',cursive; color:var(--blue); font-size:1.55rem; margin-bottom:8px; }
+  .name-sub { color:#636e72; font-size:0.88rem; margin-bottom:22px; font-weight:600; line-height:1.6; }
+  .name-input { width:100%; padding:13px 18px; border:3px solid #dfe6e9; border-radius:16px; font-family:'Nunito',sans-serif; font-size:1.05rem; font-weight:700; color:var(--text); outline:none; transition:border-color 0.2s; margin-bottom:18px; }
+  .name-input:focus { border-color:var(--blue); }
+  .btn-start { background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; border:none; padding:15px 40px; border-radius:50px; font-family:'Fredoka One',cursive; font-size:1.25rem; cursor:pointer; width:100%; box-shadow:0 6px 20px rgba(45,108,223,0.35); transition:transform 0.15s; }
+  .btn-start:hover { transform:translateY(-2px); }
+
+  /* LESSON */
+  .lesson-screen { padding:18px; max-width:720px; margin:0 auto; }
+  .lesson-card { background:white; border-radius:22px; padding:22px; box-shadow:var(--shadow); margin-bottom:14px; border-left:6px solid var(--blue); }
+  .lesson-title { font-family:'Fredoka One',cursive; color:var(--blue); font-size:1.3rem; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .lesson-sub { font-size:0.87rem; color:#555; font-weight:600; line-height:1.7; margin-bottom:12px; }
+
+  /* Place value chart */
+  .pv-chart-wrap { overflow-x:auto; margin:14px 0; }
+  .pv-chart { border-collapse:collapse; width:100%; min-width:520px; font-size:0.8rem; }
+  .pv-chart th, .pv-chart td { border:2px solid #dee2e6; padding:7px 6px; text-align:center; font-weight:700; }
+  .pv-chart .period-milliard { background:#1a1a6e; color:white; }
+  .pv-chart .period-million  { background:#2d6cdf; color:white; }
+  .pv-chart .period-thousand { background:#00cec9; color:white; }
+  .pv-chart .period-ones     { background:#6c3fc5; color:white; }
+  .pv-chart .h-cell { background:#e8f0ff; color:var(--navy); }
+  .pv-chart .t-cell { background:#fff0f0; color:#c0392b; }
+  .pv-chart .o-cell { background:#e8fff8; color:#006652; }
+  .pv-chart .num-row td { font-family:'Fredoka One',cursive; font-size:1.1rem; background:#fffdf0; }
+  .pv-chart .num-row .hl { color:var(--orange); background:#fff3e0; }
+
+  /* Number display */
+  .num-display { display:flex; justify-content:center; flex-wrap:wrap; gap:4px; margin:14px 0; }
+  .digit-box { border-radius:12px; padding:10px 14px; text-align:center; min-width:54px; }
+  .digit-box .d-num { font-family:'Fredoka One',cursive; font-size:1.8rem; line-height:1; }
+  .digit-box .d-lbl { font-size:0.6rem; font-weight:800; margin-top:4px; line-height:1.2; }
+  .d-milliard  { background:#1a1a6e; color:white; }
+  .d-hmillion  { background:#1e40af; color:white; }
+  .d-tmillion  { background:#2563eb; color:white; }
+  .d-million   { background:#3b82f6; color:white; }
+  .d-hthousand { background:#00897b; color:white; }
+  .d-tthousand { background:#00cec9; color:white; }
+  .d-thousand  { background:#26d0ce; color:white; }
+  .d-hundred   { background:#6c3fc5; color:white; }
+  .d-ten       { background:#9b59b6; color:white; }
+  .d-one       { background:#fd79a8; color:white; }
+  .digit-comma { font-family:'Fredoka One',cursive; font-size:1.8rem; color:#636e72; align-self:flex-end; padding-bottom:10px; }
+
+  .key-box { background:linear-gradient(135deg,#e8f0ff,#d0e4ff); border-radius:14px; padding:13px 16px; border:2px solid #b3ceff; margin-bottom:10px; }
+  .key-title { font-family:'Fredoka One',cursive; color:var(--navy); font-size:0.95rem; margin-bottom:8px; }
+  .key-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .key-item { background:white; border-radius:10px; padding:8px 10px; font-size:0.8rem; font-weight:700; border-left:4px solid var(--blue); }
+  .key-item span { color:var(--blue); font-family:'Fredoka One',cursive; }
+
+  .tip-box { background:linear-gradient(135deg,#fffbe6,#fff3cc); border-radius:14px; padding:12px 16px; border:2px solid var(--yellow); margin-top:10px; }
+  .tip-text { font-size:0.87rem; color:#7d5a00; font-weight:700; line-height:1.7; }
+
+  .example-box { background:linear-gradient(135deg,#f0f4ff,#e0e8ff); border-radius:14px; padding:14px; border:2px solid #b3ceff; margin-top:10px; }
+  .ex-label { font-family:'Fredoka One',cursive; color:var(--orange); font-size:0.85rem; margin-bottom:6px; }
+  .ex-text { font-size:0.88rem; color:var(--text); font-weight:600; line-height:1.7; }
+  .ex-ans { color:var(--blue); font-weight:800; font-size:1rem; }
+
+  .btn-quiz { background:linear-gradient(135deg,var(--purple),var(--pink)); color:white; border:none; padding:15px; border-radius:50px; font-family:'Fredoka One',cursive; font-size:1.25rem; cursor:pointer; width:100%; box-shadow:0 6px 20px rgba(108,63,197,0.35); transition:transform 0.15s; margin-top:10px; }
+  .btn-quiz:hover { transform:translateY(-2px); }
+
+  /* QUIZ */
+  .quiz-screen { padding:15px; max-width:720px; margin:0 auto; }
+  .quiz-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:13px; background:white; border-radius:20px; padding:11px 17px; box-shadow:var(--shadow); }
+  .q-counter { font-family:'Fredoka One',cursive; color:var(--navy); font-size:1rem; }
+  .q-score-live { font-family:'Fredoka One',cursive; color:var(--green); font-size:1rem; }
+  .progress-bar-wrap { width:100%; height:10px; background:#dde8ff; border-radius:10px; margin-bottom:14px; overflow:hidden; }
+  .progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--navy),var(--cyan)); border-radius:10px; transition:width 0.5s ease; }
+
+  .q-card { background:white; border-radius:22px; padding:20px 17px; box-shadow:var(--shadow); margin-bottom:13px; }
+  .q-num { font-family:'Fredoka One',cursive; font-size:0.82rem; color:var(--pink); margin-bottom:5px; }
+
+  /* Exam badge */
+  .exam-badge { display:inline-block; background:linear-gradient(135deg,#e17055,#fdcb6e); color:white; border-radius:50px; padding:3px 12px; font-size:0.72rem; font-weight:800; margin-bottom:8px; font-family:'Nunito',sans-serif; }
+
+  .q-text { font-family:'Fredoka One',cursive; font-size:1.15rem; color:var(--text); margin-bottom:8px; line-height:1.5; }
+
+  /* Big number highlight box */
+  .q-number-box { background:linear-gradient(135deg,#f0f4ff,#e0e8ff); border-radius:14px; padding:12px 16px; margin-bottom:14px; text-align:center; border:2px solid #b3ceff; }
+  .q-number-text { font-family:'Fredoka One',cursive; font-size:1.5rem; color:var(--navy); letter-spacing:2px; }
+  .q-number-text .hl { color:var(--orange); text-decoration:underline; }
+
+  .options { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .option-btn { background:#f8f4ff; border:3px solid #d8c8ff; border-radius:15px; padding:13px 10px; font-family:'Nunito',sans-serif; font-weight:800; font-size:0.95rem; color:var(--text); cursor:pointer; transition:all 0.2s; text-align:center; line-height:1.4; }
+  .option-btn:hover:not(:disabled){ background:#ede7ff; border-color:var(--purple); transform:translateY(-2px); }
+  .option-btn.correct { background:#d4fce6; border-color:var(--green); color:#00875a; }
+  .option-btn.wrong   { background:#ffe0e6; border-color:var(--red); color:var(--red); }
+  .option-btn:disabled { cursor:default; }
+
+  .hint-row { display:flex; justify-content:center; margin-bottom:11px; }
+  .hint-btn { background:linear-gradient(135deg,var(--yellow),var(--orange)); border:none; border-radius:50px; padding:9px 22px; font-family:'Fredoka One',cursive; font-size:0.9rem; color:white; cursor:pointer; box-shadow:0 4px 14px rgba(255,154,0,0.35); display:flex; align-items:center; gap:6px; transition:transform 0.15s; }
+  .hint-btn:hover { transform:scale(1.04); }
+  .hint-box { background:linear-gradient(135deg,#fffbe6,#fff3cc); border:2px solid var(--yellow); border-radius:13px; padding:11px 14px; margin-bottom:11px; font-size:0.87rem; font-weight:700; color:#7d5a00; display:none; animation:slideDown 0.3s ease; }
+  @keyframes slideDown{ from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);} }
+
+  .feedback-box { border-radius:13px; padding:11px 15px; margin-top:11px; font-weight:700; font-size:0.93rem; display:none; animation:slideDown 0.3s ease; }
+  .feedback-box.correct { background:#d4fce6; color:#00875a; border:2px solid var(--green); }
+  .feedback-box.wrong   { background:#ffe0e6; color:var(--red); border:2px solid var(--red); }
+
+  .btn-next { background:linear-gradient(135deg,var(--blue),var(--navy)); color:white; border:none; padding:14px; border-radius:50px; font-family:'Fredoka One',cursive; font-size:1.1rem; cursor:pointer; width:100%; box-shadow:0 6px 20px rgba(45,108,223,0.35); transition:transform 0.15s; margin-top:11px; display:none; }
+  .btn-next:hover { transform:translateY(-2px); }
+
+  /* RESULTS */
+  .result-screen { padding:18px; max-width:720px; margin:0 auto; }
+  .result-card { background:white; border-radius:26px; padding:28px 22px; box-shadow:var(--shadow); text-align:center; margin-bottom:15px; }
+  .result-emoji { font-size:4rem; margin-bottom:8px; }
+  .result-title { font-family:'Fredoka One',cursive; font-size:1.75rem; color:var(--navy); margin-bottom:6px; }
+  .result-name { font-size:1rem; color:#636e72; font-weight:600; margin-bottom:18px; }
+  .score-circle { width:130px; height:130px; border-radius:50%; background:linear-gradient(135deg,var(--navy),var(--cyan)); display:flex; flex-direction:column; align-items:center; justify-content:center; margin:0 auto 18px; box-shadow:0 8px 24px rgba(26,26,110,0.35); }
+  .score-num { font-family:'Fredoka One',cursive; font-size:2.5rem; color:white; line-height:1; }
+  .score-label { font-size:0.75rem; color:rgba(255,255,255,0.85); font-weight:700; }
+  .stats-row { display:flex; justify-content:center; gap:13px; margin-bottom:18px; flex-wrap:wrap; }
+  .stat-box { border-radius:15px; padding:13px 18px; min-width:88px; text-align:center; }
+  .stat-box.s-correct { background:#d4fce6; border:2px solid var(--green); }
+  .stat-box.s-wrong   { background:#ffe0e6; border:2px solid var(--red); }
+  .stat-num { font-family:'Fredoka One',cursive; font-size:1.8rem; }
+  .stat-box.s-correct .stat-num { color:#00875a; }
+  .stat-box.s-wrong .stat-num   { color:var(--red); }
+  .stat-lbl { font-size:0.76rem; font-weight:700; color:#636e72; margin-top:2px; }
+
+  .corrections-card { background:white; border-radius:22px; padding:20px; box-shadow:var(--shadow); margin-bottom:15px; border-left:6px solid var(--red); }
+  .corrections-title { font-family:'Fredoka One',cursive; color:var(--red); font-size:1.15rem; margin-bottom:13px; }
+  .correction-item { background:#fff8f9; border-radius:13px; padding:11px 13px; margin-bottom:9px; border:1px solid #ffd6dc; }
+  .corr-q { font-weight:700; color:var(--text); font-size:0.87rem; margin-bottom:5px; }
+  .corr-your { color:var(--red); font-size:0.83rem; }
+  .corr-right { color:var(--green); font-weight:800; font-size:0.88rem; margin-top:3px; }
+
+  .btn-whatsapp { background:linear-gradient(135deg,#25D366,#128C7E); color:white; border:none; padding:15px; border-radius:50px; font-family:'Fredoka One',cursive; font-size:1.15rem; cursor:pointer; width:100%; box-shadow:0 6px 20px rgba(37,211,102,0.35); transition:transform 0.15s; margin-bottom:11px; display:flex; align-items:center; justify-content:center; gap:10px; text-decoration:none; }
+  .btn-whatsapp:hover { transform:translateY(-2px); }
+  .btn-retry { background:linear-gradient(135deg,var(--orange),var(--gold)); color:white; border:none; padding:13px; border-radius:50px; font-family:'Fredoka One',cursive; font-size:1.05rem; cursor:pointer; width:100%; box-shadow:0 6px 18px rgba(225,112,85,0.35); transition:transform 0.15s; }
+  .btn-retry:hover { transform:translateY(-2px); }
+
+  @keyframes pop{ 0%{transform:scale(0);opacity:0;}70%{transform:scale(1.3);}100%{transform:scale(1);opacity:1;} }
+  .star-anim { display:inline-block; animation:pop 0.4s ease forwards; }
+
+  /* period colors */
+  .p-milliard { color:#1a1a6e; font-weight:900; }
+  .p-million  { color:#2563eb; font-weight:900; }
+  .p-thousand { color:#00897b; font-weight:900; }
+  .p-ones     { color:#6c3fc5; font-weight:900; }
+</style>
+</head>
+<body>
+
+<div class="bg-shapes">
+  <div class="shape"></div><div class="shape"></div><div class="shape"></div>
+  <div class="shape"></div><div class="shape"></div><div class="shape"></div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="brand">⭐ ENGINEER NADEIM ⭐</div>
+  <div class="brand-phone">📞 01061782782</div>
+  <div class="header-title">🔢 Place Value — Big Numbers</div>
+  <div class="header-sub">Grade 4 — Lessons 1 &amp; 2 | Unit 1</div>
+</div>
+
+<!-- NAME SCREEN -->
+<div id="nameScreen" class="screen active">
+  <div class="name-screen">
+    <div class="name-card">
+      <div class="name-emoji">🌟</div>
+      <div class="name-title">Hello, Superstar! 👋</div>
+      <div class="name-sub">Big Numbers &amp; Place Values — Grade 4<br>Enter your name to start!</div>
+      <input type="text" class="name-input" id="studentName" placeholder="Your name here..." maxlength="40"/>
+      <button class="btn-start" onclick="goLesson()">📚 Let's Learn First!</button>
+    </div>
+  </div>
+</div>
+
+<!-- LESSON SCREEN -->
+<div id="lessonScreen" class="screen">
+  <div class="lesson-screen">
+
+    <!-- 1: What is Place Value -->
+    <div class="lesson-card">
+      <div class="lesson-title">🔢 What is Place Value?</div>
+      <div class="lesson-sub">
+        The <strong>value of each digit</strong> in a number depends on its <strong>position (place)</strong>.<br>
+        We group digits into <strong>Periods</strong> — each period has 3 digits: Ones, Tens, Hundreds.
+      </div>
+      <div class="tip-box">
+        <div class="tip-text">
+          📌 There are <strong>4 Periods</strong> you need to know:<br>
+          <span class="p-ones">■ ONES</span> &nbsp;|&nbsp;
+          <span class="p-thousand">■ THOUSANDS</span> &nbsp;|&nbsp;
+          <span class="p-million">■ MILLIONS</span> &nbsp;|&nbsp;
+          <span class="p-milliard">■ MILLIARDS (Billions)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: Place Value Chart -->
+    <div class="lesson-card" style="border-left-color:var(--purple);">
+      <div class="lesson-title" style="color:var(--purple);">📊 The Place Value Chart</div>
+      <div class="pv-chart-wrap">
+        <table class="pv-chart">
+          <tr>
+            <th class="period-milliard" colspan="1">MILLIARDS</th>
+            <th class="period-million"  colspan="3">MILLIONS</th>
+            <th class="period-thousand" colspan="3">THOUSANDS</th>
+            <th class="period-ones"     colspan="3">ONES</th>
+          </tr>
+          <tr>
+            <td class="o-cell">Ones<br>(Milliards)</td>
+            <td class="h-cell">Hundreds<br>Millions</td>
+            <td class="t-cell">Tens<br>Millions</td>
+            <td class="o-cell">Ones<br>Millions</td>
+            <td class="h-cell">Hundreds<br>Thousands</td>
+            <td class="t-cell">Tens<br>Thousands</td>
+            <td class="o-cell">Ones<br>Thousands</td>
+            <td class="h-cell">Hundreds</td>
+            <td class="t-cell">Tens</td>
+            <td class="o-cell">Ones</td>
+          </tr>
+          <tr class="num-row">
+            <td class="hl">5</td>
+            <td>8</td><td>3</td><td>4</td>
+            <td>6</td><td class="hl">0</td><td>9</td>
+            <td>0</td><td>5</td><td>2</td>
+          </tr>
+        </table>
+      </div>
+      <p style="font-size:0.82rem;color:#636e72;font-weight:600;text-align:center;margin-top:6px;">Number: <strong>5,834,609,052</strong></p>
+    </div>
+
+    <!-- 3: Digit boxes visual -->
+    <div class="lesson-card" style="border-left-color:var(--cyan);">
+      <div class="lesson-title" style="color:var(--cyan);">🎨 See the Digits &amp; Their Places</div>
+      <p style="font-size:0.82rem;color:#636e72;font-weight:600;margin-bottom:10px;">Look at the number <strong>3,418,079,265</strong></p>
+      <div class="num-display">
+        <div class="digit-box d-milliard"><div class="d-num">3</div><div class="d-lbl">Milliard</div></div>
+        <div class="digit-comma">,</div>
+        <div class="digit-box d-hmillion"><div class="d-num">4</div><div class="d-lbl">Hundred Millions</div></div>
+        <div class="digit-box d-tmillion"><div class="d-num">1</div><div class="d-lbl">Ten Millions</div></div>
+        <div class="digit-box d-million"><div class="d-num">8</div><div class="d-lbl">Millions</div></div>
+        <div class="digit-comma">,</div>
+        <div class="digit-box d-hthousand"><div class="d-num">0</div><div class="d-lbl">Hundred Thousands</div></div>
+        <div class="digit-box d-tthousand"><div class="d-num">7</div><div class="d-lbl">Ten Thousands</div></div>
+        <div class="digit-box d-thousand"><div class="d-num">9</div><div class="d-lbl">Thousands</div></div>
+        <div class="digit-comma">,</div>
+        <div class="digit-box d-hundred"><div class="d-num">2</div><div class="d-lbl">Hundreds</div></div>
+        <div class="digit-box d-ten"><div class="d-num">6</div><div class="d-lbl">Tens</div></div>
+        <div class="digit-box d-one"><div class="d-num">5</div><div class="d-lbl">Ones</div></div>
+      </div>
+    </div>
+
+    <!-- 4: Key Facts -->
+    <div class="lesson-card" style="border-left-color:var(--orange);">
+      <div class="lesson-title" style="color:var(--orange);">💡 Key Facts to Remember</div>
+      <div class="key-box">
+        <div class="key-title">📌 Number of Digits in Each Period's Smallest Number:</div>
+        <div class="key-grid">
+          <div class="key-item">Smallest <strong>6-digit</strong> number = <span>100,000</span></div>
+          <div class="key-item">Smallest <strong>7-digit</strong> = <span>1,000,000</span> (1 Million)</div>
+          <div class="key-item">Smallest <strong>10-digit</strong> = <span>1,000,000,000</span> (1 Milliard)</div>
+          <div class="key-item">Largest <strong>6-digit</strong> = <span>999,999</span></div>
+        </div>
+      </div>
+      <div class="tip-box" style="margin-top:10px;">
+        <div class="tip-text">
+          🎯 <strong>Million</strong> = smallest number formed from <strong>7 digits</strong><br>
+          🎯 <strong>Milliard</strong> = smallest number formed from <strong>10 digits</strong><br>
+          🎯 Each place value is <strong>10 times</strong> the one to its right!
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: Examples -->
+    <div class="lesson-card" style="border-left-color:var(--pink);">
+      <div class="lesson-title" style="color:var(--pink);">✨ Solved Examples</div>
+
+      <div class="example-box">
+        <div class="ex-label">EXAMPLE 1 — From the Book</div>
+        <div class="ex-text">
+          In <strong>1,542,345,678</strong> — what digit is in the <strong>Ten Millions</strong> place?<br>
+          → Count from right: Ones, Tens, Hundreds, Thousands, Ten-Thousands, Hundred-Thousands, Millions, <u>Ten Millions</u><br>
+          → The digit in Ten Millions place = <span class="ex-ans">4</span>
+        </div>
+      </div>
+
+      <div class="example-box" style="margin-top:10px;">
+        <div class="ex-label">EXAMPLE 2 — Place Value of 7 in 7,213,455,686</div>
+        <div class="ex-text">
+          The number has 10 digits → the first digit is in the <strong>Milliards</strong> place.<br>
+          → Place value of <strong>7</strong> = <span class="ex-ans">Milliards</span>
+        </div>
+      </div>
+
+      <div class="example-box" style="margin-top:10px;">
+        <div class="ex-label">EXAMPLE 3 — Exam Style (Luxor 24)</div>
+        <div class="ex-text">
+          The digit in <strong>Ten Thousands</strong> place in <strong>1,351,278</strong> is:<br>
+          → Ones=8, Tens=7, Hundreds=2, Thousands=1, <u>Ten Thousands=5</u><br>
+          → Answer = <span class="ex-ans">5</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-quiz" onclick="startQuiz()">🎯 I'm Ready — Start the Quiz!</button>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quizScreen" class="screen">
+  <div class="quiz-screen">
+    <div class="quiz-top">
+      <div class="q-counter">Question <span id="qNum">1</span> of 10</div>
+      <div class="q-score-live">⭐ <span id="livScore">0</span> / 10</div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="q-card">
+      <div class="q-num" id="qNumLabel">Q1</div>
+      <div id="examBadge"></div>
+      <div class="q-text" id="qText"></div>
+      <div class="q-number-box" id="qNumberBox" style="display:none;">
+        <div class="q-number-text" id="qNumberText"></div>
+      </div>
+      <div class="hint-row"><button class="hint-btn" onclick="showHint()">💡 Hint</button></div>
+      <div class="hint-box" id="hintBox"></div>
+      <div class="options" id="optionsGrid"></div>
+      <div class="feedback-box" id="feedbackBox"></div>
+      <button class="btn-next" id="btnNext" onclick="nextQuestion()">Next ➡️</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="resultScreen" class="screen">
+  <div class="result-screen">
+    <div class="result-card">
+      <div class="result-emoji" id="resultEmoji">🏆</div>
+      <div class="result-title" id="resultTitle">Outstanding!</div>
+      <div class="result-name" id="resultName"></div>
+      <div class="score-circle">
+        <div class="score-num" id="scoreNum">0</div>
+        <div class="score-label">OUT OF 10</div>
+      </div>
+      <div class="stats-row">
+        <div class="stat-box s-correct"><div class="stat-num" id="statCorrect">0</div><div class="stat-lbl">✅ Correct</div></div>
+        <div class="stat-box s-wrong"><div class="stat-num" id="statWrong">0</div><div class="stat-lbl">❌ Wrong</div></div>
+      </div>
+      <div id="starRow" style="font-size:2rem;margin-bottom:8px;"></div>
+      <div id="gradeMsg" style="font-family:'Fredoka One',cursive;font-size:1rem;color:#636e72;"></div>
+    </div>
+    <div class="corrections-card" id="correctionsCard" style="display:none;">
+      <div class="corrections-title">📝 Corrections — Learn from mistakes!</div>
+      <div id="correctionsList"></div>
+    </div>
+    <a id="waLink" class="btn-whatsapp" href="#" target="_blank">📲 Send Result to Engineer Nadeim on WhatsApp</a>
+    <button class="btn-retry" onclick="retryQuiz()">🔄 Try Again!</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  // From textbook
+  {
+    q: "In the number below, what digit is in the Tens place?",
+    number: "1,542,345,678",
+    options: ["6","7","8","5"],
+    correct: 1,
+    hint: "Count from right: Ones=8, Tens=7, Hundreds=6...",
+    exam: null
+  },
+  {
+    q: "In the number below, what digit is in the Hundreds place?",
+    number: "1,542,345,678",
+    options: ["7","5","8","6"],
+    correct: 3,
+    hint: "Count from right: Ones=8, Tens=7, Hundreds=6!",
+    exam: null
+  },
+  {
+    q: "In the number below, what digit is in the Hundred Thousands place?",
+    number: "1,542,345,678",
+    options: ["5","4","3","2"],
+    correct: 2,
+    hint: "Count from right: Ones, Tens, Hundreds, Thousands, Ten-Thousands, Hundred-Thousands = ?",
+    exam: null
+  },
+  {
+    q: "In the number below, what digit is in the Ten Millions place?",
+    number: "1,542,345,678",
+    options: ["5","4","1","2"],
+    correct: 1,
+    hint: "From right: Ones, Tens, Hundreds, Thousands, Ten-Thousands, Hundred-Thousands, Millions, Ten-Millions = ?",
+    exam: null
+  },
+  {
+    q: "In the number below, what digit is in the One Milliards place?",
+    number: "1,542,345,678",
+    options: ["5","2","1","4"],
+    correct: 2,
+    hint: "The number has 10 digits. The FIRST digit (leftmost) is in the Milliards place!",
+    exam: null
+  },
+  // Exam questions
+  {
+    q: "The digit in the Ten Thousands place in the number below is:",
+    number: "1,351,278",
+    options: ["3","2","1","5"],
+    correct: 3,
+    hint: "Count from right: Ones=8, Tens=7, Hundreds=2, Thousands=1, Ten Thousands=?",
+    exam: "🏆 Luxor 2024"
+  },
+  {
+    q: "The digit in the Hundred Thousands place in the number below is:",
+    number: "3,910,472",
+    options: ["1","2","4","9"],
+    correct: 3,
+    hint: "Count from right: Ones=2, Tens=7, Hundreds=4, Thousands=0, Ten Thousands=1, Hundred Thousands=?",
+    exam: "🏆 El-Beheira 2024"
+  },
+  {
+    q: "Million is the smallest number formed from _____ digits.",
+    number: null,
+    options: ["5 digits","6 digits","7 digits","8 digits"],
+    correct: 2,
+    hint: "1,000,000 — count the digits: 1-0-0-0-0-0-0 = how many?",
+    exam: "🏆 Ismailia 2024"
+  },
+  {
+    q: "Milliard is the smallest number formed from _____ digits.",
+    number: null,
+    options: ["7 digits","8 digits","9 digits","10 digits"],
+    correct: 3,
+    hint: "1,000,000,000 — count all digits: that's 10 digits!",
+    exam: "🏆 El-Menia 2024"
+  },
+  {
+    q: "The place value of the digit 7 in the number below is:",
+    number: "7,213,455,686",
+    options: ["Millions","Ten Millions","Hundred Millions","Milliards"],
+    correct: 3,
+    hint: "This number has 10 digits. The leftmost digit is always in the Milliards place!",
+    exam: "🏆 Kafr El-Sheikh 2024"
+  }
+];
+
+let studentName="", currentQ=0, score=0, userAnswers=[];
+
+function goLesson(){
+  const n=document.getElementById('studentName').value.trim();
+  if(!n){document.getElementById('studentName').style.borderColor='var(--red)';return;}
+  studentName=n; showScreen('lessonScreen');
+}
+
+function startQuiz(){
+  currentQ=0; score=0; userAnswers=[];
+  showScreen('quizScreen'); loadQuestion();
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function loadQuestion(){
+  const q=questions[currentQ];
+  document.getElementById('qNum').textContent=currentQ+1;
+  document.getElementById('qNumLabel').textContent='Q'+(currentQ+1);
+  document.getElementById('livScore').textContent=score;
+  document.getElementById('progressFill').style.width=(currentQ/questions.length*100)+'%';
+  document.getElementById('qText').textContent=q.q;
+
+  // exam badge
+  const badge=document.getElementById('examBadge');
+  badge.innerHTML=q.exam?`<span class="exam-badge">${q.exam}</span>`:'';
+
+  // number box
+  const nb=document.getElementById('qNumberBox');
+  const nt=document.getElementById('qNumberText');
+  if(q.number){ nb.style.display='block'; nt.textContent=q.number; }
+  else { nb.style.display='none'; }
+
+  document.getElementById('hintBox').style.display='none';
+  document.getElementById('feedbackBox').style.display='none';
+  document.getElementById('feedbackBox').className='feedback-box';
+  document.getElementById('btnNext').style.display='none';
+
+  const grid=document.getElementById('optionsGrid');
+  grid.innerHTML='';
+  q.options.forEach((opt,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn'; btn.textContent=opt;
+    btn.onclick=()=>selectAnswer(i);
+    grid.appendChild(btn);
+  });
+}
+
+function showHint(){
+  const h=document.getElementById('hintBox');
+  h.textContent='💡 '+questions[currentQ].hint;
+  h.style.display='block';
+}
+
+function selectAnswer(idx){
+  const q=questions[currentQ];
+  const btns=document.querySelectorAll('.option-btn');
+  btns.forEach(b=>b.disabled=true);
+  const ok=idx===q.correct;
+  btns[idx].classList.add(ok?'correct':'wrong');
+  if(!ok) btns[q.correct].classList.add('correct');
+  const label=q.number?`${q.q} (${q.number})`:q.q;
+  userAnswers.push({q:label, chosen:q.options[idx], correct:q.options[q.correct], isCorrect:ok});
+  if(ok) score++;
+  const fb=document.getElementById('feedbackBox');
+  fb.className='feedback-box '+(ok?'correct':'wrong');
+  fb.textContent=ok?'✅ Great job! That\'s correct! 🌟':`❌ Not quite! The correct answer is: ${q.options[q.correct]}`;
+  fb.style.display='block';
+  document.getElementById('livScore').textContent=score;
+  document.getElementById('btnNext').style.display='block';
+}
+
+function nextQuestion(){
+  currentQ++;
+  if(currentQ<questions.length) loadQuestion();
+  else showResults();
+}
+
+function showResults(){
+  showScreen('resultScreen');
+  const total=questions.length, wrong=total-score;
+  document.getElementById('scoreNum').textContent=score;
+  document.getElementById('statCorrect').textContent=score;
+  document.getElementById('statWrong').textContent=wrong;
+  document.getElementById('resultName').textContent='👤 '+studentName;
+
+  const pct=score/total;
+  let emoji='🏆',title='Outstanding!',grade='Perfect! You are a Place Value Master! 🎉';
+  if(pct<1&&pct>=0.9){emoji='🥇';title='Excellent!';grade='Almost perfect! Amazing work! 🌟';}
+  else if(pct>=0.7){emoji='😊';title='Good Job!';grade='Great effort! Keep practicing! 💪';}
+  else if(pct>=0.5){emoji='📚';title='Keep Practicing!';grade='Good try! Review and try again! 🔄';}
+  else{emoji='💡';title="Don't Give Up!";grade='Review the lesson and try again! 🌈';}
+
+  document.getElementById('resultEmoji').textContent=emoji;
+  document.getElementById('resultTitle').textContent=title;
+  document.getElementById('gradeMsg').textContent=grade;
+
+  const stars=Math.round(pct*5);
+  document.getElementById('starRow').innerHTML=Array.from({length:5},(_,i)=>
+    `<span class="star-anim" style="animation-delay:${i*0.1}s">${i<stars?'⭐':'☆'}</span>`).join('');
+
+  const wrong2=userAnswers.filter(a=>!a.isCorrect);
+  if(wrong2.length>0){
+    document.getElementById('correctionsCard').style.display='block';
+    document.getElementById('correctionsList').innerHTML=wrong2.map(a=>`
+      <div class="correction-item">
+        <div class="corr-q">Q: ${a.q}</div>
+        <div class="corr-your">❌ Your answer: ${a.chosen}</div>
+        <div class="corr-right">✅ Correct answer: ${a.correct}</div>
+      </div>`).join('');
+  }
+
+  const msg=encodeURIComponent(
+    `🔢 Place Value Quiz — Engineer Nadeim\n`+
+    `👤 Student: ${studentName}\n`+
+    `🎯 Score: ${score}/${total}\n`+
+    `✅ Correct: ${score} | ❌ Wrong: ${wrong}\n`+
+    (wrong2.length>0
+      ?`\n📝 Wrong answers:\n`+wrong2.map(a=>`• ${a.q}\n  ❌ ${a.chosen} → ✅ ${a.correct}`).join('\n')
+      :`\n🌟 Perfect Score! All correct!`)
+  );
+  document.getElementById('waLink').href=`https://wa.me/201061782782?text=${msg}`;
+}
+
+function retryQuiz(){ showScreen('lessonScreen'); window.scrollTo(0,0); }
+</script>
+</body>
+</html>
